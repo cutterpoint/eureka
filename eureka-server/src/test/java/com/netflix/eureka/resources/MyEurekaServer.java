@@ -92,16 +92,13 @@ public class MyEurekaServer {
 
 
         while(true) {
-            Thread.sleep(60000);
-            System.out.println("休眠60s完成");
+            Thread.sleep(1000);
         }
 
     }
 
     @Test
     public void test2Re() {
-
-        InstanceInfo instanceInfo = instanceInfoIt.next();
 
         eurekaServiceUrl = "http://localhost:8081/v2";
 
@@ -140,9 +137,12 @@ public class MyEurekaServer {
                 eurekaServiceUrl
         );
 
-        EurekaHttpResponse<Void> httpResponse = jerseyEurekaClient.register(instanceInfo);
+        for(int i = 0; i < 2; ++i) {
+            InstanceInfo instanceInfo = instanceInfoIt.next();
+            EurekaHttpResponse<Void> httpResponse = jerseyEurekaClient.register(instanceInfo);
 
-        assertThat(httpResponse.getStatusCode(), is(equalTo(204)));
+            assertThat(httpResponse.getStatusCode(), is(equalTo(204)));
+        }
     }
 
 }
