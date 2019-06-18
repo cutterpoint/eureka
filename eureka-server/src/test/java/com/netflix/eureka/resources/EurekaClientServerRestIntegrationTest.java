@@ -91,7 +91,9 @@ public class EurekaClientServerRestIntegrationTest {
                 eurekaServiceUrl
         );
 
-        Thread.sleep(Long.MAX_VALUE);
+        while(true) {
+            Thread.sleep(1000);
+        }
     }
 
     @AfterClass

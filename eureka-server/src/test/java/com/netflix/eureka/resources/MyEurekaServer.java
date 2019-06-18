@@ -55,7 +55,7 @@ public class MyEurekaServer {
         String myServiceUrl = "http://127.0.0.1:8081/v2/";
         System.setProperty("eureka.region", "default");
         System.setProperty("eureka.name", "eureka");
-        System.setProperty("eureka.vipAddress", "eureka.mydomain.net");
+        System.setProperty("eureka.vipAddress", "localhost");
         System.setProperty("eureka.port", "8081");
         System.setProperty("eureka.preferSameZone", "false");
         System.setProperty("eureka.shouldUseDns", "false");
@@ -65,13 +65,14 @@ public class MyEurekaServer {
         System.setProperty("eureka.awsAccessId", "fake_aws_access_id");
         System.setProperty("eureka.awsSecretKey", "fake_aws_secret_key");
         System.setProperty("eureka.numberRegistrySyncRetries", "0");
+        //同步一个服务需要启动的线程数
+        System.setProperty("eureka.maxThreadsForPeerReplication", "1");
 
         server = new Server(8081);
 
 //        File webappFiledir = new File("./eureka-server/src/main/webapp");
 //        File webappWebXmlFiledir = new File("./eureka-server/src/main/webapp/WEB-INF/web.xml");
 //        File resourceFiledir = new File("./eureka-server/src/main/resources");
-
         File webappFiledir = new File("H:\\1-study\\1-spring\\1-springcloud\\1-eureka\\1-source\\eureka\\eureka-server\\src\\main\\webapp");
         File webappWebXmlFiledir = new File("H:\\1-study\\1-spring\\1-springcloud\\1-eureka\\1-source\\eureka\\eureka-server\\src\\main\\webapp\\WEB-INF\\web.xml");
         File resourceFiledir = new File("H:\\1-study\\1-spring\\1-springcloud\\1-eureka\\1-source\\eureka\\eureka-server\\src\\main\\resources");
@@ -81,7 +82,6 @@ public class MyEurekaServer {
             System.out.println(webappWebXmlFiledir.getAbsolutePath());
             System.out.println(resourceFiledir.getAbsolutePath());
         }
-
 
         WebAppContext webAppCtx = new WebAppContext(webappFiledir.getAbsolutePath(), "/");
         webAppCtx.setDescriptor(webappWebXmlFiledir.getAbsolutePath());
