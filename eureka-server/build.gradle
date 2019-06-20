@@ -1,5 +1,5 @@
 apply plugin: 'war'
-//apply plugin: 'java'
+apply plugin: 'java'
 
 dependencies {
     compile project(':eureka-client')
@@ -28,3 +28,4 @@ war {
 
 // Integration test loads eureka war, so it must be ready prior to running tests
 test.dependsOn war
+//test.dependsOn java

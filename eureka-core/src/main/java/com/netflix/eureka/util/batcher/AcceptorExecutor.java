@@ -288,6 +288,7 @@ class AcceptorExecutor<ID, T> {
             }
         }
 
+        //批量执行pendingtasks队列中的数据
         void assignBatchWork() {
             if (hasEnoughTasksForNextBatch()) {
                 if (batchWorkRequests.tryAcquire(1)) {

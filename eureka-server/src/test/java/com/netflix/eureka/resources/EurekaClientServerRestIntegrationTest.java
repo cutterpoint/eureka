@@ -236,6 +236,7 @@ public class EurekaClientServerRestIntegrationTest {
         System.setProperty("eureka.awsAccessId", "fake_aws_access_id");
         System.setProperty("eureka.awsSecretKey", "fake_aws_secret_key");
         System.setProperty("eureka.numberRegistrySyncRetries", "0");
+        System.setProperty("java.io.tmpdir", "H:\\1-study\\1-spring\\1-springcloud\\1-eureka\\1-source\\eureka\\1-temp");
     }
 
     private static void removeEurekaConfiguration() {
@@ -244,6 +245,7 @@ public class EurekaClientServerRestIntegrationTest {
 
     private static void startServer() throws Exception {
         File warFile = findWar();
+        System.out.println("war路径：" + warFile.getAbsolutePath());
 
         server = new Server(8081);
 

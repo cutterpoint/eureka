@@ -59,14 +59,18 @@ public class MyEurekaServer {
         System.setProperty("eureka.port", "8081");
         System.setProperty("eureka.preferSameZone", "false");
         System.setProperty("eureka.shouldUseDns", "false");
-        System.setProperty("eureka.shouldFetchRegistry", "false");
+        System.setProperty("eureka.shouldFetchRegistry", "true");
         System.setProperty("eureka.serviceUrl.defaultZone", myServiceUrl);
         System.setProperty("eureka.serviceUrl.default.defaultZone", myServiceUrl);
         System.setProperty("eureka.awsAccessId", "fake_aws_access_id");
         System.setProperty("eureka.awsSecretKey", "fake_aws_secret_key");
         System.setProperty("eureka.numberRegistrySyncRetries", "0");
+        //设置rest服务展示，当节点为空的时候，需要等待的时间 waitTimeInMsWhenSyncEmpty
+        System.setProperty("eureka.waitTimeInMsWhenSyncEmpty", "0");
         //同步一个服务需要启动的线程数
         System.setProperty("eureka.maxThreadsForPeerReplication", "1");
+        System.setProperty("java.io.tmpdir", "H:\\1-study\\1-spring\\1-springcloud\\1-eureka\\1-source\\eureka\\1-temp");
+        //waitTimeInMsWhenSyncEmpty
 
         server = new Server(8081);
 
@@ -97,7 +101,7 @@ public class MyEurekaServer {
 
     }
 
-    @Test
+//    @Test
     public void test2Re() {
 
         eurekaServiceUrl = "http://localhost:8081/v2";
@@ -143,6 +147,36 @@ public class MyEurekaServer {
 
             assertThat(httpResponse.getStatusCode(), is(equalTo(204)));
         }
+    }
+
+
+    @Test
+    public void testMissedHeartbeat() throws Exception {
+        InstanceInfo instanceInfo = instanceInfoIt.next();
+
+        eurekaServiceUrl = "http://localhost:8081/v2/";
+        eurekaServerConfig = mock(EurekaServerConfig.class);
+        httpClientFactory = JerseyEurekaHttpClientFactory.newBuilder()
+                .withClientName("testEurekaClient")
+                .withConnectionTimeout(1000)
+                .withReadTimeout(1000)
+                .withMaxConnectionsPerHost(1)
+                .withMaxTotalConnections(1)
+                .withConnectionIdleTimeout(1000)
+                .build();
+
+        jerseyEurekaClient = httpClientFactory.newClient(new DefaultEndpoint(eurekaServiceUrl));
+
+        ServerCodecs serverCodecs = new DefaultServerCodecs(eurekaServerConfig);
+        jerseyReplicationClient = JerseyReplicationClient.createReplicationClient(
+                eurekaServerConfig,
+                serverCodecs,
+                eurekaServiceUrl
+        );
+        // Now send heartbeat
+        EurekaHttpResponse<InstanceInfo> heartBeatResponse = jerseyReplicationClient.sendHeartBeat(instanceInfo.getAppName(), instanceInfo.getId(), instanceInfo, null);
+
+        assertThat(heartBeatResponse.getStatusCode(), is(equalTo(404)));
     }
 
 }

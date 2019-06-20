@@ -130,6 +130,8 @@ public class ApplicationsResource {
         // Check if the server allows the access to the registry. The server can
         // restrict access if it is not
         // ready to serve traffic depending on various reasons.
+        //判断是否有节点在容器里面，如果没有节点注册进去的话，那么就反馈403，否则就继续往下走
+        //如果想跳过这个时间，那么就修改节点为空需要等待的时间属性：getWaitTimeInMsWhenSyncEmpty
         if (!registry.shouldAllowAccess(isRemoteRegionRequested)) {
             return Response.status(Status.FORBIDDEN).build();
         }

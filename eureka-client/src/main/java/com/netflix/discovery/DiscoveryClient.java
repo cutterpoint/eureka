@@ -428,6 +428,7 @@ public class DiscoveryClient implements EurekaClient {
         }
 
         if (clientConfig.shouldFetchRegistry() && !fetchRegistry(false)) {
+            // 从 Eureka-Server 拉取注册信息
             fetchRegistryFromBackup();
         }
 
@@ -1265,6 +1266,7 @@ public class DiscoveryClient implements EurekaClient {
      * Initializes all scheduled tasks.
      */
     private void initScheduledTasks() {
+        //判断客户端是否应该从服务端同步数据
         if (clientConfig.shouldFetchRegistry()) {
             // registry cache refresh timer
             int registryFetchIntervalSeconds = clientConfig.getRegistryFetchIntervalSeconds();
