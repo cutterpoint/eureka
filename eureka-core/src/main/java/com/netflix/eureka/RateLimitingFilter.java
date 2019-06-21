@@ -129,17 +129,22 @@ public class RateLimitingFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        //获取请求对象，获取url中的路径标识
         Target target = getTarget(request);
+        //如果不是get请求，那么直接进去，这里只对get请求进行拦截
         if (target == Target.Other) {
             chain.doFilter(request, response);
             return;
         }
 
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-
+        //判断是否限流
         if (isRateLimited(httpRequest, target)) {
+            //监控使用的方法
             incrementStats(target);
+            //限流开关是否打开
             if (serverConfig.isRateLimiterEnabled()) {
+                //如果打开，那么反馈503
                 ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
                 return;
             }
@@ -173,10 +178,12 @@ public class RateLimitingFilter implements Filter {
     }
 
     private boolean isRateLimited(HttpServletRequest request, Target target) {
+        //特权请求，不做拦截
         if (isPrivileged(request)) {
             logger.debug("Privileged {} request", target);
             return false;
         }
+        //判断是否超负载，如果已经超负载，那么也需要进行限流
         if (isOverloaded(target)) {
             logger.debug("Overloaded {} request; discarding it", target);
             return true;
@@ -186,9 +193,11 @@ public class RateLimitingFilter implements Filter {
     }
 
     private boolean isPrivileged(HttpServletRequest request) {
+        //如果配置了eureka.rateLimiterThrottleStandardClients 参数，标识这个服务不用做拦截
         if (serverConfig.isRateLimiterThrottleStandardClients()) {
             return false;
         }
+        //获取特权列表
         Set<String> privilegedClients = serverConfig.getRateLimiterPrivilegedClients();
         String clientName = request.getHeader(AbstractEurekaIdentity.AUTH_NAME_HEADER_KEY);
         return privilegedClients.contains(clientName) || DEFAULT_PRIVILEGED_CLIENTS.contains(clientName);
@@ -197,6 +206,7 @@ public class RateLimitingFilter implements Filter {
     private boolean isOverloaded(Target target) {
         int maxInWindow = serverConfig.getRateLimiterBurstSize();
         int fetchWindowSize = serverConfig.getRateLimiterRegistryFetchAverageRate();
+        //请求令牌
         boolean overloaded = !registryFetchRateLimiter.acquire(maxInWindow, fetchWindowSize);
 
         if (target == Target.FullFetch) {
