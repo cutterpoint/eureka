@@ -52,7 +52,7 @@ public class MyEurekaServer {
     public void test1StartServerByJetty() throws Exception {
 
         //初始化环境数据配置
-        String myServiceUrl = "http://127.0.0.1:8081/v2/";
+        String myServiceUrl = "http://127.0.0.1:8082/v2/";
         System.setProperty("eureka.region", "default");
         System.setProperty("eureka.name", "eureka");
         System.setProperty("eureka.vipAddress", "localhost");
@@ -72,7 +72,7 @@ public class MyEurekaServer {
         System.setProperty("java.io.tmpdir", "H:\\1-study\\1-spring\\1-springcloud\\1-eureka\\1-source\\eureka\\1-temp");
         //waitTimeInMsWhenSyncEmpty
 
-        server = new Server(8081);
+        server = new Server(8082);
 
 //        File webappFiledir = new File("./eureka-server/src/main/webapp");
 //        File webappWebXmlFiledir = new File("./eureka-server/src/main/webapp/WEB-INF/web.xml");
@@ -101,10 +101,10 @@ public class MyEurekaServer {
 
     }
 
-//    @Test
+    @Test
     public void test2Re() {
 
-        eurekaServiceUrl = "http://localhost:8081/v2";
+        eurekaServiceUrl = "http://localhost:8082/v2";
 
         //serverconfig
         eurekaServerConfig = mock(EurekaServerConfig.class);

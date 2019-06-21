@@ -162,7 +162,7 @@ public class DiscoveryClient implements EurekaClient {
     private final EndpointUtils.ServiceUrlRandomizer urlRandomizer;
     private final EndpointRandomizer endpointRandomizer;
     private final Provider<BackupRegistry> backupRegistryProvider;
-    private final EurekaTransport eurekaTransport;
+    public final EurekaTransport eurekaTransport;
 
     private final AtomicReference<HealthCheckHandler> healthCheckHandlerRef = new AtomicReference<>();
     private volatile Map<String, Applications> remoteRegionVsApps = new ConcurrentHashMap<>();
@@ -187,7 +187,7 @@ public class DiscoveryClient implements EurekaClient {
 
     private final long initTimestampMs;
 
-    private static final class EurekaTransport {
+    public static final class EurekaTransport {
         private ClosableResolver bootstrapResolver;
         private TransportClientFactory transportClientFactory;
 
@@ -221,6 +221,54 @@ public class DiscoveryClient implements EurekaClient {
             if (bootstrapResolver != null) {
                 bootstrapResolver.shutdown();
             }
+        }
+
+        public ClosableResolver getBootstrapResolver() {
+            return bootstrapResolver;
+        }
+
+        public void setBootstrapResolver(ClosableResolver bootstrapResolver) {
+            this.bootstrapResolver = bootstrapResolver;
+        }
+
+        public TransportClientFactory getTransportClientFactory() {
+            return transportClientFactory;
+        }
+
+        public void setTransportClientFactory(TransportClientFactory transportClientFactory) {
+            this.transportClientFactory = transportClientFactory;
+        }
+
+        public EurekaHttpClient getRegistrationClient() {
+            return registrationClient;
+        }
+
+        public void setRegistrationClient(EurekaHttpClient registrationClient) {
+            this.registrationClient = registrationClient;
+        }
+
+        public EurekaHttpClientFactory getRegistrationClientFactory() {
+            return registrationClientFactory;
+        }
+
+        public void setRegistrationClientFactory(EurekaHttpClientFactory registrationClientFactory) {
+            this.registrationClientFactory = registrationClientFactory;
+        }
+
+        public EurekaHttpClient getQueryClient() {
+            return queryClient;
+        }
+
+        public void setQueryClient(EurekaHttpClient queryClient) {
+            this.queryClient = queryClient;
+        }
+
+        public EurekaHttpClientFactory getQueryClientFactory() {
+            return queryClientFactory;
+        }
+
+        public void setQueryClientFactory(EurekaHttpClientFactory queryClientFactory) {
+            this.queryClientFactory = queryClientFactory;
         }
     }
 
@@ -899,10 +947,12 @@ public class DiscoveryClient implements EurekaClient {
     /**
      * Shuts down Eureka Client. Also sends a deregistration request to the
      * eureka server.
+     * 服务下线
      */
     @PreDestroy
     @Override
     public synchronized void shutdown() {
+        //cas操作，保证一个线程进入
         if (isShutdown.compareAndSet(false, true)) {
             logger.info("Shutting down DiscoveryClient ...");
 
@@ -913,10 +963,14 @@ public class DiscoveryClient implements EurekaClient {
             cancelScheduledTasks();
 
             // If APPINFO was registered
+            //如果app已经注册过了，那么就需要进行服务下线
+            //下线操作，测试
             if (applicationInfoManager != null
                     && clientConfig.shouldRegisterWithEureka()
                     && clientConfig.shouldUnregisterOnShutdown()) {
+                //修改实例状态为down
                 applicationInfoManager.setInstanceStatus(InstanceStatus.DOWN);
+                //下线操作
                 unregister();
             }
 

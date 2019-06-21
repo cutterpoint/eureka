@@ -5,17 +5,29 @@ import com.netflix.appinfo.InstanceInfo;
 import com.netflix.appinfo.LeaseInfo;
 import com.netflix.appinfo.MyDataCenterInstanceConfig;
 import com.netflix.config.ConfigurationManager;
+import com.netflix.discovery.shared.resolver.DefaultEndpoint;
+import com.netflix.discovery.shared.transport.EurekaHttpClient;
+import com.netflix.discovery.shared.transport.jersey.JerseyEurekaHttpClientFactory;
+import com.netflix.discovery.shared.transport.TransportClientFactory;
 import com.netflix.discovery.util.InstanceInfoGenerator;
+import com.netflix.eureka.EurekaServerConfig;
+import com.netflix.eureka.resources.DefaultServerCodecs;
+import com.netflix.eureka.resources.ServerCodecs;
+import com.netflix.eureka.transport.JerseyReplicationClient;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author David Liu
@@ -54,6 +66,7 @@ public class DiscoveryClientRegisterUpdateTest {
                 .setLeaseInfo(leaseInfo)
                 .build();
         applicationInfoManager = new TestApplicationInfoManager(instanceInfo);
+        //mockito.spy 可以直接模拟这个对象出来
         client = Mockito.spy(new TestClient(applicationInfoManager, new DefaultEurekaClientConfig()));
 
         // force the initial registration to eagerly run
@@ -110,6 +123,50 @@ public class DiscoveryClientRegisterUpdateTest {
         client.shutdown();
         Assert.assertEquals(0, applicationInfoManager.getStatusChangeListeners().size());
         Mockito.verify(client, Mockito.times(1)).unregister();
+    }
+
+    @Test
+    public void testShutDownHttp() {
+        String eurekaServiceUrl = "http://localhost:8081/v2";
+
+        //serverconfig
+        EurekaServerConfig eurekaServerConfig = mock(EurekaServerConfig.class);
+
+        // Cluster management related
+        when(eurekaServerConfig.getPeerEurekaNodesUpdateIntervalMs()).thenReturn(1000);
+        // Replication logic related
+        when(eurekaServerConfig.shouldSyncWhenTimestampDiffers()).thenReturn(true);
+        when(eurekaServerConfig.getMaxTimeForReplication()).thenReturn(1000);
+        when(eurekaServerConfig.getMaxElementsInPeerReplicationPool()).thenReturn(10);
+        when(eurekaServerConfig.getMinThreadsForPeerReplication()).thenReturn(1);
+        when(eurekaServerConfig.getMaxThreadsForPeerReplication()).thenReturn(1);
+        when(eurekaServerConfig.shouldBatchReplication()).thenReturn(true);
+        // Peer node connectivity (used by JerseyReplicationClient)
+        when(eurekaServerConfig.getPeerNodeTotalConnections()).thenReturn(1);
+        when(eurekaServerConfig.getPeerNodeTotalConnectionsPerHost()).thenReturn(1);
+        when(eurekaServerConfig.getPeerNodeConnectionIdleTimeoutSeconds()).thenReturn(1000);
+
+        JerseyEurekaHttpClientFactory httpClientFactory = JerseyEurekaHttpClientFactory.newBuilder()
+                .withClientName("testEurekaClient")
+                .withConnectionTimeout(1000)
+                .withReadTimeout(1000)
+                .withMaxConnectionsPerHost(1)
+                .withMaxTotalConnections(1)
+                .withConnectionIdleTimeout(1000)
+                .build();
+
+        EurekaHttpClient jerseyEurekaClient = httpClientFactory.newClient(new DefaultEndpoint(eurekaServiceUrl));
+
+        ServerCodecs serverCodecs = new DefaultServerCodecs(eurekaServerConfig);
+        JerseyReplicationClient jerseyReplicationClient = JerseyReplicationClient.createReplicationClient(
+                eurekaServerConfig,
+                serverCodecs,
+                eurekaServiceUrl
+        );
+
+        client.eurekaTransport.setRegistrationClient(jerseyReplicationClient);
+        client.shutdown();
+
     }
 
     @Test
