@@ -170,6 +170,52 @@ public class DiscoveryClientRegisterUpdateTest {
     }
 
     @Test
+    public void testHeartBeat() {
+        String eurekaServiceUrl = "http://localhost:8082/v2";
+
+        //serverconfig
+        EurekaServerConfig eurekaServerConfig = mock(EurekaServerConfig.class);
+
+        // Cluster management related
+        when(eurekaServerConfig.getPeerEurekaNodesUpdateIntervalMs()).thenReturn(1000);
+        // Replication logic related
+        when(eurekaServerConfig.shouldSyncWhenTimestampDiffers()).thenReturn(true);
+        when(eurekaServerConfig.getMaxTimeForReplication()).thenReturn(1000);
+        when(eurekaServerConfig.getMaxElementsInPeerReplicationPool()).thenReturn(10);
+        when(eurekaServerConfig.getMinThreadsForPeerReplication()).thenReturn(1);
+        when(eurekaServerConfig.getMaxThreadsForPeerReplication()).thenReturn(1);
+        when(eurekaServerConfig.shouldBatchReplication()).thenReturn(true);
+        // Peer node connectivity (used by JerseyReplicationClient)
+        when(eurekaServerConfig.getPeerNodeTotalConnections()).thenReturn(1);
+        when(eurekaServerConfig.getPeerNodeTotalConnectionsPerHost()).thenReturn(1);
+        when(eurekaServerConfig.getPeerNodeConnectionIdleTimeoutSeconds()).thenReturn(1000);
+
+//        JerseyEurekaHttpClientFactory httpClientFactory = JerseyEurekaHttpClientFactory.newBuilder()
+//                .withClientName("testEurekaClient")
+//                .withConnectionTimeout(1000)
+//                .withReadTimeout(1000)
+//                .withMaxConnectionsPerHost(1)
+//                .withMaxTotalConnections(1)
+//                .withConnectionIdleTimeout(1000)
+//                .build();
+
+//        EurekaHttpClient jerseyEurekaClient = httpClientFactory.newClient(new DefaultEndpoint(eurekaServiceUrl));
+
+        ServerCodecs serverCodecs = new DefaultServerCodecs(eurekaServerConfig);
+        JerseyReplicationClient jerseyReplicationClient = JerseyReplicationClient.createReplicationClient(
+                eurekaServerConfig,
+                serverCodecs,
+                eurekaServiceUrl
+        );
+
+        client.eurekaTransport.setRegistrationClient(jerseyReplicationClient);
+//        client.shutdown();
+        client.renew();
+
+    }
+
+
+    @Test
     public void testRegistrationDisabled() throws Exception {
         client.shutdown();  // shutdown the default @Before client first
 

@@ -67,6 +67,8 @@ public class MyEurekaServer {
         System.setProperty("eureka.numberRegistrySyncRetries", "0");
         //设置rest服务展示，当节点为空的时候，需要等待的时间 waitTimeInMsWhenSyncEmpty
         System.setProperty("eureka.waitTimeInMsWhenSyncEmpty", "0");
+        //lease.renewalInterval 心跳延迟启动时间,秒
+        System.setProperty("eureka.lease.renewalInterval", "1");
         //同步一个服务需要启动的线程数
         System.setProperty("eureka.maxThreadsForPeerReplication", "1");
         System.setProperty("java.io.tmpdir", "H:\\1-study\\1-spring\\1-springcloud\\1-eureka\\1-source\\eureka\\1-temp");
@@ -77,9 +79,11 @@ public class MyEurekaServer {
 //        File webappFiledir = new File("./eureka-server/src/main/webapp");
 //        File webappWebXmlFiledir = new File("./eureka-server/src/main/webapp/WEB-INF/web.xml");
 //        File resourceFiledir = new File("./eureka-server/src/main/resources");
-        File webappFiledir = new File("H:\\1-study\\1-spring\\1-springcloud\\1-eureka\\1-source\\eureka\\eureka-server\\src\\main\\webapp");
-        File webappWebXmlFiledir = new File("H:\\1-study\\1-spring\\1-springcloud\\1-eureka\\1-source\\eureka\\eureka-server\\src\\main\\webapp\\WEB-INF\\web.xml");
-        File resourceFiledir = new File("H:\\1-study\\1-spring\\1-springcloud\\1-eureka\\1-source\\eureka\\eureka-server\\src\\main\\resources");
+        String rootPath = "H:\\ideaworkspace\\eureka\\eureka-server\\src\\main\\";
+//        rootPath = "H:\\1-study\\1-spring\\1-springcloud\\1-eureka\\1-source\\eureka\\eureka-server\\src\\main\\";
+        File webappFiledir = new File(rootPath + "webapp");
+        File webappWebXmlFiledir = new File(rootPath + "webapp\\WEB-INF\\web.xml");
+        File resourceFiledir = new File(rootPath + "resources");
 
         if(webappFiledir.exists()) {
             System.out.println(webappFiledir.getAbsolutePath());

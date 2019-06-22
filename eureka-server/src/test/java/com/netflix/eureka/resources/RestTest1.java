@@ -8,6 +8,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.concurrent.Callable;
 
 /**
  * @ProjectName: eureka
@@ -18,7 +19,7 @@ import java.io.File;
  * @Date: 2019/6/21 18:15
  * @Version: 1.0
  */
-public class RestTest1 {
+public class RestTest1 implements Callable {
 
     @Test
     public void test1() throws Exception {
@@ -46,4 +47,8 @@ public class RestTest1 {
 
     }
 
+    @Override
+    public Object call() throws Exception {
+        return null;
+    }
 }

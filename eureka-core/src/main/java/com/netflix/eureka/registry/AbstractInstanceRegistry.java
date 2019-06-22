@@ -190,6 +190,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
      */
     public void register(InstanceInfo registrant, int leaseDuration, boolean isReplication) {
         try {
+            //注意这里又把读写锁， 多个读锁不互斥，读锁与写锁互斥，就是说在进行写操作的时候无法读，进行读操作的时候无法写
             read.lock();
             Map<String, Lease<InstanceInfo>> gMap = registry.get(registrant.getAppName());
             REGISTER.increment(isReplication);
@@ -202,6 +203,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             }
             Lease<InstanceInfo> existingLease = gMap.get(registrant.getId());
             // Retain the last dirty timestamp without overwriting it, if there is already a lease
+            //如果这个服务信息存在
             if (existingLease != null && (existingLease.getHolder() != null)) {
                 Long existingLastDirtyTimestamp = existingLease.getHolder().getLastDirtyTimestamp();
                 Long registrationLastDirtyTimestamp = registrant.getLastDirtyTimestamp();
@@ -217,9 +219,13 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                 }
             } else {
                 // The lease does not exist and hence it is a new registration
+                //如果这个服务信息不存在，那么上锁
                 synchronized (lock) {
                     if (this.expectedNumberOfClientsSendingRenews > 0) {
                         // Since the client wants to register it, increase the number of clients sending renews
+                        //客户端注册，需要续租的节点+1
+                        //Eureka Server以一种谦虚的态度来判断是不是自己出了问题，也就是当大量的服务续约超时时，就认为是自己出现问题了。（如果少量服务续约超时，则认为是服务故障）
+                        //如果打开自我保护的话，则开启自我保护机制，不再进行服务的剔除。
                         this.expectedNumberOfClientsSendingRenews = this.expectedNumberOfClientsSendingRenews + 1;
                         updateRenewsPerMinThreshold();
                     }
@@ -948,6 +954,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         apps.setVersion(responseCache.getVersionDeltaWithRegions().get());
         Map<String, Application> applicationInstancesMap = new HashMap<String, Application>();
         try {
+            //这里上读写的写锁，那么其他进行读的地方就不能进去了，要阻塞
             write.lock();
             Iterator<RecentlyChangedItem> iter = this.recentlyChangedQueue.iterator();
             logger.debug("The number of elements in the delta queue is :{}", this.recentlyChangedQueue.size());
@@ -1189,6 +1196,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         responseCache.invalidate(appName, vipAddress, secureVipAddress);
     }
 
+    //自我保护阀值的计算
     protected void updateRenewsPerMinThreshold() {
         this.numberOfRenewsPerMinThreshold = (int) (this.expectedNumberOfClientsSendingRenews
                 * (60.0 / serverConfig.getExpectedClientRenewalIntervalSeconds())
